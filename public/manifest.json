@@ -1,0 +1,20 @@
+{
+  "name": "FRUTAÇAÍ",
+  "short_name": "FRUTAÇAÍ",
+  "description": "Açaí premium, sucos naturais e salgados artesanais",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0a1a",
+  "theme_color": "#7B2D8B",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png",          "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png",          "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "/screenshot-narrow.png", "sizes": "540x720",  "type": "image/png", "form_factor": "narrow" },
+    { "src": "/screenshot-wide.png",   "sizes": "1024x593", "type": "image/png", "form_factor": "wide"   }
+  ]
+}
