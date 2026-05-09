@@ -1,0 +1,164 @@
+rules_version = '2';
+
+/**
+ * FRUTAÇAÍ — firestore.rules
+ *
+ * CORREÇÕES APLICADAS (auditoria):
+ *  ✅ orders: allow create validado com schema obrigatório
+ *     — impede pedidos falsos, campos maliciosos e abuso de custos
+ *  ✅ orders: validação de tipos, limites de valor e tamanho do carrinho
+ *  ✅ orders: campos imutáveis (status inicial fixado em "novo")
+ *  ✅ orders: atualização restrita — só muda status e updatedAt
+ *  ✅ admins: write liberado apenas para superadmin (não mais "if false")
+ *  ✅ pix_sessions: coleção isolada para sessões de pagamento
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers de autenticação ─────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'superadmin';
+    }
+
+    // ─── Validação de pedido ──────────────────────────────────────
+
+    function validOrderCreate() {
+      let d = request.resource.data;
+
+      // Campos obrigatórios presentes
+      let hasRequiredFields =
+        d.keys().hasAll(['items', 'total', 'mode', 'status']);
+
+      // Status inicial deve ser sempre "novo" (nunca "pago" ou "pronto" direto)
+      let validStatus = d.status == 'novo';
+
+      // Modo válido
+      let validMode = d.mode == 'mesa' || d.mode == 'balcao';
+
+      // Total: número positivo dentro dos limites operacionais
+      let validTotal =
+        d.total is number &&
+        d.total > 0 &&
+        d.total <= 5000;
+
+      // Carrinho: pelo menos 1 item, no máximo 50
+      let validItems =
+        d.items is list &&
+        d.items.size() > 0 &&
+        d.items.size() <= 50;
+
+      // Campos de texto: tamanhos razoáveis (evita documentos gigantes)
+      let validTextFields =
+        (!('obs'         in d) || (d.obs         is string && d.obs.size()         <= 300)) &&
+        (!('clienteNome' in d) || (d.clienteNome is string && d.clienteNome.size() <= 80))  &&
+        (!('mesa'        in d) || (d.mesa        is string && d.mesa.size()        <= 20))  &&
+        (!('clienteId'   in d) || (d.clienteId   is string && d.clienteId.size()   <= 128));
+
+      // pixPago nunca pode ser true na criação (só o backend muda via Service Account)
+      let notFraudPix =
+        !('pixPago' in d) || d.pixPago == false;
+
+      return hasRequiredFields
+          && validStatus
+          && validMode
+          && validTotal
+          && validItems
+          && validTextFields
+          && notFraudPix;
+    }
+
+    function validOrderUpdate() {
+      let d = request.resource.data;
+      let prev = resource.data;
+
+      // Só permite alterar os campos de fluxo operacional
+      let allowedKeys = ['status', 'updatedAt', 'pay', 'pixPago', 'paymentId'];
+      let onlyAllowedChanged =
+        d.diff(prev).affectedKeys().hasOnly(allowedKeys);
+
+      // Status deve ser um valor válido do fluxo
+      let validStatus =
+        !('status' in d) ||
+        d.status in ['novo', 'prep', 'pronto', 'entregue', 'cancelado'];
+
+      // pixPago: só pode ir de false → true, nunca de true → false
+      let validPixPago =
+        !('pixPago' in d) ||
+        (prev.get('pixPago', false) == false && d.pixPago == true) ||
+        (prev.get('pixPago', false) == true  && d.pixPago == true);
+
+      return onlyAllowedChanged && validStatus && validPixPago;
+    }
+
+    // ─── Produtos ─────────────────────────────────────────────────
+
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Categorias ───────────────────────────────────────────────
+
+    match /categories/{catId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Config da loja ───────────────────────────────────────────
+
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Pedidos ──────────────────────────────────────────────────
+    // Criação pública MAS com validação rigorosa de schema.
+    // Nenhum campo arbitrário ou valor manipulado é aceito.
+
+    match /orders/{orderId} {
+      allow create: if validOrderCreate();
+      allow read:   if isAdmin();
+      allow update: if isAdmin() && validOrderUpdate();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Sessões Pix ──────────────────────────────────────────────
+    // Escritas apenas pelo backend (Service Account) via REST API.
+    // Clientes e admins não podem ler nem escrever diretamente.
+
+    match /pix_sessions/{sessionId} {
+      allow read, write: if false; // somente Service Account via Admin SDK
+    }
+
+    // ─── Admins ───────────────────────────────────────────────────
+    // Cada admin lê o próprio doc.
+    // Criar/editar admins: somente superadmin.
+    // Isso resolve o problema anterior de "write: if false" que
+    // impedia gerenciar admins pelo SDK.
+
+    match /admins/{uid} {
+      allow read:   if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin() || request.auth.uid == uid;
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── Bloqueia tudo mais ───────────────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

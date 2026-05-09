@@ -1,0 +1,56 @@
+{
+  "id": "/cardapio/",
+  "name": "FRUTAÇAÍ — Sucos e Vitaminas",
+  "short_name": "FRUTAÇAÍ",
+  "description": "Cardápio digital e sistema de pedidos FRUTAÇAÍ",
+  "start_url": "/cardapio/",
+  "scope": "/cardapio/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5eeff",
+  "theme_color": "#7B2D8B",
+  "lang": "pt-BR",
+  "categories": ["food", "lifestyle", "shopping"],
+  "icons": [
+    {
+      "src": "/cardapio/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/cardapio/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/cardapio/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/cardapio/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/cardapio/screenshot-narrow.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Cardápio FRUTAÇAÍ no celular"
+    },
+    {
+      "src": "/cardapio/screenshot-wide.png",
+      "sizes": "844x390",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Cardápio FRUTAÇAÍ em modo paisagem"
+    }
+  ]
+}

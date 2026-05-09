@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+
+# env — NUNCA commitar
+.env
+.env.local
+.env.*.local
+
+# build
+dist/
+build/
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Firebase service account — NUNCA commitar
+*service-account*.json
+firebase-adminsdk*.json
