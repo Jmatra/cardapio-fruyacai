@@ -1,1 +1,4 @@
-{"buildCommand":"next build","outputDirectory":".next","cleanUrls":true} 
+{
+  "buildCommand": "next build",
+  "outputDirectory": ".next"
+}
