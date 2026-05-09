@@ -4,31 +4,9 @@
  */
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth, connectAuthEmulator } from "firebase/auth";
-import { getFirestore, type Firestore, connectFirestoreEmulator } from "firebase/firestore";
-import { getStorage, type FirebaseStorage, connectStorageEmulator } from "firebase/storage";
-
-/* ─── Env Validation ─── */
-
-const REQUIRED_ENV_VARS = [
-  "NEXT_PUBLIC_FIREBASE_API_KEY",
-  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
-  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-  "NEXT_PUBLIC_FIREBASE_APP_ID",
-] as const;
-
-function assertEnvVars(): void {
-  const missing = REQUIRED_ENV_VARS.filter((key) => !process.env[key]);
-  if (missing.length > 0) {
-    throw new Error(
-      `[FRUYAÇAÍ] Missing Firebase env vars:\n${missing.map((k) => `  • ${k}`).join("\n")}`
-    );
-  }
-}
-
-/* ─── Config ─── */
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA9lboBMRIJZPeDOVIXNuxpO4hmNWzyTGg",
@@ -36,13 +14,11 @@ const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "frutacai-f3423",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "frutacai-f3423.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "793258809926",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:793258809926:web:94cb271ff75840a73e0847",};
-
-/* ─── Singleton ─── */
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:793258809926:web:94cb271ff75840a73e0847",
+};
 
 function initFirebase(): FirebaseApp {
   if (getApps().length === 0) {
-    if (process.env.NODE_ENV !== "test") assertEnvVars();
     return initializeApp(firebaseConfig);
   }
   return getApp();
@@ -52,18 +28,6 @@ const app: FirebaseApp = initFirebase();
 const auth: Auth = getAuth(app);
 const db: Firestore = getFirestore(app);
 const storage: FirebaseStorage = getStorage(app);
-
-/* ─── Emulators (dev only) ─── */
-
-if (
-  process.env.NODE_ENV === "development" &&
-  process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true"
-) {
-  connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
-  connectFirestoreEmulator(db, "localhost", 8080);
-  connectStorageEmulator(storage, "localhost", 9199);
-  console.info("[FRUYAÇAÍ] 🔥 Firebase Emulators connected");
-}
 
 export { app, auth, db, storage };
 export type { FirebaseApp, Auth, Firestore, FirebaseStorage };
